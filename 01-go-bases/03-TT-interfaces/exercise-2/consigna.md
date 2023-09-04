@@ -14,4 +14,3 @@ El porcentaje de mantenerlo en la tienda es en base al precio del
 producto.
 El costo de mantener el producto en stock en la tienda es un porcentaje 
 del precio del producto.
-
