@@ -27,9 +27,12 @@ func main() {
 	products := router.Group("/products")
 
 	// GET Product
-	products.GET("", Products)
-	products.GET("/:id", ProductsById)
-	products.GET("/search", ProductsByPrice)
+	products.GET("", GetProducts)
+	products.GET("/:id", GetProductById)
+	products.GET("/search", GetProductsByPrice)
+
+	// POST Product
+	products.POST("", PostProduct)
 
 	router.Run() // Iniciamos el servidor y por defecto escucha el puerto 8080
 
@@ -42,11 +45,11 @@ func Pong(c *gin.Context) {
 	})
 }
 
-func Products(ctx *gin.Context) {
+func GetProducts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, repo.GetAll())
 }
 
-func ProductsById(ctx *gin.Context) {
+func GetProductById(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 
 	// Convert id to int
@@ -67,7 +70,7 @@ func ProductsById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, product)
 }
 
-func ProductsByPrice(ctx *gin.Context) {
+func GetProductsByPrice(ctx *gin.Context) {
 	priceFilter, err := strconv.ParseFloat(ctx.DefaultQuery("priceGt", "0.0"), 64)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -83,6 +86,44 @@ func ProductsByPrice(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, result)
+}
+
+func PostProduct(ctx *gin.Context) {
+	var request entities.ProductRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid JSON provided",
+		})
+		return
+	}
+	newProduct, err := repo.AddProduct(
+		request.Name,
+		request.Quantity,
+		request.Code,
+		request.Published,
+		request.Expiration,
+		request.Price)
+
+	// En caso de que el producto ya exista o su expiration no sea una fecha valida
+	if err != nil {
+		ctx.JSON(http.StatusConflict, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	// Creamos el response si esta todo bien
+	response := entities.ProductResponse{
+		Id:         newProduct.Id,
+		Name:       newProduct.Name,
+		Quantity:   newProduct.Quantity,
+		Code:       newProduct.Code_Value,
+		Published:  newProduct.Is_Published,
+		Expiration: newProduct.Expiration,
+		Price:      newProduct.Price,
+	}
+
+	ctx.JSON(http.StatusCreated, response)
 }
 
 func InitializeRepository() {

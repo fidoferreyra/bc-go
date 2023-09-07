@@ -9,8 +9,16 @@ type Product struct {
 	Expiration   string  `json:"expiration,omitempty"`
 	Price        float64 `json:"price,omitempty"`
 }
+type ProductRequest struct {
+	Name       string  `json:"name"`
+	Quantity   int     `json:"quantity"`
+	Code       string  `json:"code"`
+	Published  bool    `json:"published,omitempty"`
+	Expiration string  `json:"expiration"`
+	Price      float64 `json:"price"`
+}
 
-type response struct {
+type ProductResponse struct {
 	Id         int     `json:"id,omitempty"`
 	Name       string  `json:"name,omitempty"`
 	Quantity   int     `json:"quantity,omitempty"`
