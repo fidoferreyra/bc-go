@@ -1,36 +1,47 @@
 package main
 
 import (
-	"fmt"
-	handler "my-first-go-api/cmd/handler"
-	product "my-first-go-api/internal/product"
+	"encoding/json"
+	"os"
 
+	"github.com/bootcamp-go/Consignas-Go-Web.git/cmd/server/handler"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	repo := product.NewRepository()
+	var productsList = []domain.Product{}
+	loadProducts("products.json", &productsList)
+
+	repo := product.NewRepository(productsList)
 	service := product.NewService(repo)
-	p := handler.NewProduct(service)
+	productHandler := handler.NewProductHandler(service)
 
-	//Creo el routeador
-	router := gin.Default()
+	r := gin.Default()
 
-	// GET /ping
-	router.GET("/ping", p.Pong)
-
-	products := router.Group("/products")
+	r.GET("/ping", func(c *gin.Context) { c.String(200, "pong") })
+	products := r.Group("/products")
 	{
-		products.GET("", p.GetProducts)
-		products.GET("/:id", p.GetProductById)
-		products.GET("/search", p.GetProductsByPrice)
-		products.POST("", p.PostProduct)
-		products.DELETE(":id", p.Delete)
-		products.PATCH(":id", p.Patch)
-		products.PUT(":id", p.Put)
+		products.GET("", productHandler.GetAll())
+		products.GET(":id", productHandler.GetByID())
+		products.GET("/search", productHandler.Search())
+		products.POST("", productHandler.Post())
+		products.DELETE(":id", productHandler.Delete())
+		products.PATCH(":id", productHandler.Patch())
+		products.PUT(":id", productHandler.Put())
 	}
+	r.Run(":8080")
+}
 
-	router.Run() // Iniciamos el servidor y por defecto escucha el puerto 8080
-
-	defer fmt.Println("finaliza el programa ...")
+// loadProducts carga los productos desde un archivo json
+func loadProducts(path string, list *[]domain.Product) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal([]byte(file), &list)
+	if err != nil {
+		panic(err)
+	}
 }
