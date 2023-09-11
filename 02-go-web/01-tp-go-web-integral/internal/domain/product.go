@@ -1,4 +1,4 @@
-package entities
+package domain
 
 type Product struct {
 	Id           int     `json:"id,omitempty"`
