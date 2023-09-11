@@ -84,5 +84,5 @@ func (service *ProductService) Update(id int, update domain.Product) (domain.Pro
 
 func (service *ProductService) isUniqueByCode(code string) bool {
 	_, err := service.repository.GetByCode(code)
-	return err == nil
+	return err != nil
 }

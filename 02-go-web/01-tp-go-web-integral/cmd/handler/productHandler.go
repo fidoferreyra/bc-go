@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const DateLayout = "xx/xx/xxxx"
+const DateLayout = "02/01/2006"
 
 type ProductHandler struct {
 	service *product.ProductService
@@ -75,9 +75,11 @@ func (p *ProductHandler) GetProductsByPrice(ctx *gin.Context) {
 func (p *ProductHandler) PostProduct(ctx *gin.Context) {
 	var request domain.ProductRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid JSON provided",
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON provided"})
+		return
+	}
+	if !isValidDate(request.Expiration) {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid expiration date."})
 		return
 	}
 	newProductDTO := pkg.ProductDTO{
@@ -91,10 +93,9 @@ func (p *ProductHandler) PostProduct(ctx *gin.Context) {
 	newProduct, err := p.service.AddProduct(newProductDTO)
 
 	// En caso de que el producto ya exista o su expiration no sea una fecha valida
-	//TODO: Corregir porque entra aca siempre
 	if err != nil {
 		ctx.JSON(http.StatusConflict, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
