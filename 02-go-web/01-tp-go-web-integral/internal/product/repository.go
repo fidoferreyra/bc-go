@@ -4,23 +4,15 @@ import (
 	"errors"
 
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product/interfaces"
 )
-
-type Repository interface {
-	GetAll() []domain.Product
-	GetByID(id int) (domain.Product, error)
-	SearchPriceGt(price float64) []domain.Product
-	Create(p domain.Product) (domain.Product, error)
-	Update(id int, p domain.Product) (domain.Product, error)
-	Delete(id int) error
-}
 
 type repository struct {
 	list []domain.Product
 }
 
 // NewRepository crea un nuevo repositorio
-func NewRepository(list []domain.Product) Repository {
+func NewRepository(list []domain.Product) interfaces.IRepository {
 	return &repository{list}
 }
 

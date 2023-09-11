@@ -2,20 +2,28 @@ package handler
 
 import (
 	"errors"
+	"fmt"
+	"net/http"
+	"os"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
-	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product/interfaces"
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	TokenKey   = "MY_TOKEN"
+	DateLayout = "02/01/2006"
+)
+
 type productHandler struct {
-	s product.Service
+	s interfaces.IService
 }
 
 // NewProductHandler crea un nuevo controller de productos
-func NewProductHandler(s product.Service) *productHandler {
+func NewProductHandler(s interfaces.IService) *productHandler {
 	return &productHandler{
 		s: s,
 	}
@@ -81,23 +89,12 @@ func validateEmptys(product *domain.Product) (bool, error) {
 	return true, nil
 }
 
-// validateExpiration valida que la fecha de expiracion sea valida
-func validateExpiration(exp string) (bool, error) {
-	dates := strings.Split(exp, "/")
-	list := []int{}
-	if len(dates) != 3 {
-		return false, errors.New("invalid expiration date, must be in format: dd/mm/yyyy")
-	}
-	for value := range dates {
-		number, err := strconv.Atoi(dates[value])
-		if err != nil {
-			return false, errors.New("invalid expiration date, must be numbers")
-		}
-		list = append(list, number)
-	}
-	condition := (list[0] < 1 || list[0] > 31) && (list[1] < 1 || list[1] > 12) && (list[2] < 1 || list[2] > 9999)
-	if condition {
-		return false, errors.New("invalid expiration date, date must be between 1 and 31/12/9999")
+// isExpirationDateValid valida que la fecha de expiracion sea valida
+func isExpirationDateValid(exp string) (bool, error) {
+	_, err := time.Parse(DateLayout, exp)
+	if err != nil {
+		fmt.Println("Fecha inválida:", err)
+		return false, err
 	}
 	return true, nil
 }
@@ -105,6 +102,10 @@ func validateExpiration(exp string) (bool, error) {
 // Post crear un producto nuevo
 func (h *productHandler) Post() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if !isUserAuthorized(ctx.GetHeader("token")) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			return
+		}
 		var product domain.Product
 		err := ctx.ShouldBindJSON(&product)
 		if err != nil {
@@ -116,7 +117,7 @@ func (h *productHandler) Post() gin.HandlerFunc {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		valid, err = validateExpiration(product.Expiration)
+		valid, err = isExpirationDateValid(product.Expiration)
 		if !valid {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -133,6 +134,10 @@ func (h *productHandler) Post() gin.HandlerFunc {
 // Delete elimina un producto
 func (h *productHandler) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if !isUserAuthorized(ctx.GetHeader("token")) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			return
+		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
@@ -151,6 +156,10 @@ func (h *productHandler) Delete() gin.HandlerFunc {
 // Put actualiza un producto
 func (h *productHandler) Put() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		if !isUserAuthorized(ctx.GetHeader("token")) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			return
+		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
@@ -168,7 +177,7 @@ func (h *productHandler) Put() gin.HandlerFunc {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		valid, err = validateExpiration(product.Expiration)
+		valid, err = isExpirationDateValid(product.Expiration)
 		if !valid {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
@@ -193,6 +202,10 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 		Price       float64 `json:"price,omitempty"`
 	}
 	return func(ctx *gin.Context) {
+		if !isUserAuthorized(ctx.GetHeader("token")) {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			return
+		}
 		var r Request
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
@@ -213,7 +226,7 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 			Price:       r.Price,
 		}
 		if update.Expiration != "" {
-			valid, err := validateExpiration(update.Expiration)
+			valid, err := isExpirationDateValid(update.Expiration)
 			if !valid {
 				ctx.JSON(400, gin.H{"error": err.Error()})
 				return
@@ -226,4 +239,9 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 		}
 		ctx.JSON(200, p)
 	}
+}
+
+func isUserAuthorized(userToken string) bool {
+	token := os.Getenv(TokenKey)
+	return userToken != "" && userToken == token
 }

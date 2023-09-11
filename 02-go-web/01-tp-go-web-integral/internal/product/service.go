@@ -4,23 +4,15 @@ import (
 	"errors"
 
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product/interfaces"
 )
 
-type Service interface {
-	GetAll() ([]domain.Product, error)
-	GetByID(id int) (domain.Product, error)
-	SearchPriceGt(price float64) ([]domain.Product, error)
-	Create(p domain.Product) (domain.Product, error)
-	Update(id int, p domain.Product) (domain.Product, error)
-	Delete(id int) error
-}
-
 type service struct {
-	r Repository
+	r interfaces.IRepository
 }
 
 // NewService crea un nuevo servicio
-func NewService(r Repository) Service {
+func NewService(r interfaces.IRepository) interfaces.IService {
 	return &service{r}
 }
 

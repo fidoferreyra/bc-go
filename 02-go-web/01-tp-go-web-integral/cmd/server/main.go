@@ -8,9 +8,11 @@ import (
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	var productsList = []domain.Product{}
 	loadProducts("products.json", &productsList)
 
