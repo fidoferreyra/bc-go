@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 )
 
 const (
-	TokenKey   = "MY_TOKEN"
 	DateLayout = "02/01/2006"
 )
 
@@ -103,10 +101,6 @@ func isExpirationDateValid(exp string) (bool, error) {
 // Post crear un producto nuevo
 func (h *productHandler) Post() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if !isUserAuthorized(ctx.GetHeader("token")) {
-			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
-			return
-		}
 		var product domain.Product
 		err := ctx.ShouldBindJSON(&product)
 		if err != nil {
@@ -135,10 +129,6 @@ func (h *productHandler) Post() gin.HandlerFunc {
 // Delete elimina un producto
 func (h *productHandler) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if !isUserAuthorized(ctx.GetHeader("token")) {
-			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
-			return
-		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
@@ -157,10 +147,6 @@ func (h *productHandler) Delete() gin.HandlerFunc {
 // Put actualiza un producto
 func (h *productHandler) Put() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if !isUserAuthorized(ctx.GetHeader("token")) {
-			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
-			return
-		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
@@ -203,10 +189,6 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 		Price       float64 `json:"price,omitempty"`
 	}
 	return func(ctx *gin.Context) {
-		if !isUserAuthorized(ctx.GetHeader("token")) {
-			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
-			return
-		}
 		var r Request
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
@@ -240,9 +222,4 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 		}
 		web.Success(ctx, http.StatusOK, p)
 	}
-}
-
-func isUserAuthorized(userToken string) bool {
-	token := os.Getenv(TokenKey)
-	return userToken != "" && userToken == token
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/bootcamp-go/Consignas-Go-Web.git/cmd/server/handler"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/cmd/server/middlewares"
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product"
 	"github.com/bootcamp-go/Consignas-Go-Web.git/pkg/store"
 	"github.com/gin-gonic/gin"
@@ -23,6 +24,10 @@ func main() {
 
 	r.GET("/ping", func(c *gin.Context) { c.String(200, "pong") })
 	products := r.Group("/products")
+	products.Use(
+		middlewares.Logger(),
+		middlewares.Authenticator(),
+	)
 	{
 		products.GET("", productHandler.GetAll())
 		products.GET(":id", productHandler.GetByID())
