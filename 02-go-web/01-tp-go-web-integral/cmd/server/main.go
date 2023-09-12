@@ -20,12 +20,13 @@ func main() {
 	service := product.NewService(repo)
 	productHandler := handler.NewProductHandler(service)
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(middlewares.Logger())
 
 	r.GET("/ping", func(c *gin.Context) { c.String(200, "pong") })
 	products := r.Group("/products")
 	products.Use(
-		middlewares.Logger(),
 		middlewares.Authenticator(),
 	)
 	{
