@@ -1,22 +1,21 @@
 package main
 
 import (
-	"encoding/json"
-	"os"
-
 	"github.com/bootcamp-go/Consignas-Go-Web.git/cmd/server/handler"
-	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/pkg/store"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	godotenv.Load()
-	var productsList = []domain.Product{}
-	loadProducts("products.json", &productsList)
+	if err := godotenv.Load("./cmd/server/.env"); err != nil {
+		panic("Error loading .env file: " + err.Error())
+	}
 
-	repo := product.NewRepository(productsList)
+	storage := store.NewStore("./products.json")
+
+	repo := product.NewRepository(storage)
 	service := product.NewService(repo)
 	productHandler := handler.NewProductHandler(service)
 
@@ -34,16 +33,4 @@ func main() {
 		products.PUT(":id", productHandler.Put())
 	}
 	r.Run(":8080")
-}
-
-// loadProducts carga los productos desde un archivo json
-func loadProducts(path string, list *[]domain.Product) {
-	file, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal([]byte(file), &list)
-	if err != nil {
-		panic(err)
-	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/domain"
 	"github.com/bootcamp-go/Consignas-Go-Web.git/internal/product/interfaces"
+	"github.com/bootcamp-go/Consignas-Go-Web.git/pkg/web"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,7 +34,7 @@ func NewProductHandler(s interfaces.IService) *productHandler {
 func (h *productHandler) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		products, _ := h.s.GetAll()
-		c.JSON(200, products)
+		web.Success(c, http.StatusOK, products)
 	}
 }
 
@@ -43,15 +44,15 @@ func (h *productHandler) GetByID() gin.HandlerFunc {
 		idParam := c.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "invalid id"})
+			web.Failure(c, http.StatusBadRequest, errors.New("invalid id"))
 			return
 		}
 		product, err := h.s.GetByID(id)
 		if err != nil {
-			c.JSON(404, gin.H{"error": "product not found"})
+			web.Failure(c, http.StatusNotFound, errors.New("product not found"))
 			return
 		}
-		c.JSON(200, product)
+		web.Success(c, http.StatusOK, product)
 	}
 }
 
@@ -61,15 +62,15 @@ func (h *productHandler) Search() gin.HandlerFunc {
 		priceParam := c.Query("priceGt")
 		price, err := strconv.ParseFloat(priceParam, 64)
 		if err != nil {
-			c.JSON(400, gin.H{"error": "invalid price"})
+			web.Failure(c, http.StatusBadRequest, errors.New("invalid price"))
 			return
 		}
 		products, err := h.s.SearchPriceGt(price)
 		if err != nil {
-			c.JSON(404, gin.H{"error": "no products found"})
+			web.Failure(c, http.StatusNotFound, errors.New("no products found"))
 			return
 		}
-		c.JSON(200, products)
+		web.Success(c, http.StatusOK, products)
 	}
 }
 
@@ -103,31 +104,31 @@ func isExpirationDateValid(exp string) (bool, error) {
 func (h *productHandler) Post() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if !isUserAuthorized(ctx.GetHeader("token")) {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
 			return
 		}
 		var product domain.Product
 		err := ctx.ShouldBindJSON(&product)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid product"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid product"))
 			return
 		}
 		valid, err := validateEmptys(&product)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
 		valid, err = isExpirationDateValid(product.Expiration)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
 		p, err := h.s.Create(product)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
-		ctx.JSON(201, p)
+		web.Success(ctx, http.StatusCreated, p)
 	}
 }
 
@@ -135,21 +136,21 @@ func (h *productHandler) Post() gin.HandlerFunc {
 func (h *productHandler) Delete() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if !isUserAuthorized(ctx.GetHeader("token")) {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
 			return
 		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid id"))
 			return
 		}
 		err = h.s.Delete(id)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
-		ctx.JSON(200, gin.H{"message": "product deleted"})
+		web.Success(ctx, http.StatusOK, nil)
 	}
 }
 
@@ -157,37 +158,37 @@ func (h *productHandler) Delete() gin.HandlerFunc {
 func (h *productHandler) Put() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if !isUserAuthorized(ctx.GetHeader("token")) {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
 			return
 		}
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid id"))
 			return
 		}
 		var product domain.Product
 		err = ctx.ShouldBindJSON(&product)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid product"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid product"))
 			return
 		}
 		valid, err := validateEmptys(&product)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
 		valid, err = isExpirationDateValid(product.Expiration)
 		if !valid {
-			ctx.JSON(400, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusBadRequest, err)
 			return
 		}
 		p, err := h.s.Update(id, product)
 		if err != nil {
-			ctx.JSON(409, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusConflict, err)
 			return
 		}
-		ctx.JSON(200, p)
+		web.Success(ctx, http.StatusOK, p)
 	}
 }
 
@@ -203,18 +204,18 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 	}
 	return func(ctx *gin.Context) {
 		if !isUserAuthorized(ctx.GetHeader("token")) {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user unauthorized"})
+			web.Failure(ctx, http.StatusUnauthorized, errors.New("user unauthorized"))
 			return
 		}
 		var r Request
 		idParam := ctx.Param("id")
 		id, err := strconv.Atoi(idParam)
 		if err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid id"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid id"))
 			return
 		}
 		if err := ctx.ShouldBindJSON(&r); err != nil {
-			ctx.JSON(400, gin.H{"error": "invalid request"})
+			web.Failure(ctx, http.StatusBadRequest, errors.New("invalid request"))
 			return
 		}
 		update := domain.Product{
@@ -228,16 +229,16 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 		if update.Expiration != "" {
 			valid, err := isExpirationDateValid(update.Expiration)
 			if !valid {
-				ctx.JSON(400, gin.H{"error": err.Error()})
+				web.Failure(ctx, http.StatusBadRequest, err)
 				return
 			}
 		}
 		p, err := h.s.Update(id, update)
 		if err != nil {
-			ctx.JSON(409, gin.H{"error": err.Error()})
+			web.Failure(ctx, http.StatusConflict, err)
 			return
 		}
-		ctx.JSON(200, p)
+		web.Success(ctx, http.StatusOK, p)
 	}
 }
 
