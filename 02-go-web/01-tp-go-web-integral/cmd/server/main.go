@@ -9,6 +9,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title Productos Frescos
+// @version 0.7
+// @description Esta API permite obtener y modificar informacion sobre los Productos Frescos de nuestro comercio!
+// @
+// @
+// @
+// @
+// @
 func main() {
 	if err := godotenv.Load("./cmd/server/.env"); err != nil {
 		panic("Error loading .env file: " + err.Error())
