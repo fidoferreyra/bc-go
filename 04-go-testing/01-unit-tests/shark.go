@@ -13,16 +13,27 @@ type Prey struct {
 	speed int
 }
 
+// Errors
+var (
+	ErrTired     = fmt.Errorf("cannot hunt, i am really tired")
+	ErrNotHungry = fmt.Errorf("cannot hunt, i am not hungry")
+	ErrCantCatch = fmt.Errorf("could not catch it")
+	ErrNoPrey    = fmt.Errorf("cannot hunt, there is no prey")
+)
+
 func (s *Shark) Hunt(p *Prey) error {
+	if p == nil {
+		return ErrNoPrey
+	}
 	if s.tired {
-		return fmt.Errorf("cannot hunt, i am really tired")
+		return ErrTired
 	}
 	if !s.hungry {
-		return fmt.Errorf("cannot hunt, i am not hungry")
+		return ErrNotHungry
 	}
 	if p.speed >= s.speed {
 		s.tired = true
-		return fmt.Errorf("could not catch it")
+		return ErrCantCatch
 	}
 
 	s.hungry = false
