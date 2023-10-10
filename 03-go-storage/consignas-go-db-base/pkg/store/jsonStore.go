@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -35,18 +36,8 @@ func (s *jsonStore) saveProducts(products []domain.Product) error {
 	return os.WriteFile(s.pathToFile, bytes, 0644)
 }
 
-// NewJsonStore crea un nuevo store de products
-func NewJsonStore(path string) StoreInterface {
-	_, err := os.Stat(path)
-	if err != nil {
-		panic(err)
-	}
-	return &jsonStore{
-		pathToFile: path,
-	}
-}
-
-func (s *jsonStore) Read(id int) (domain.Product, error) {
+// GetById busca un producto por id
+func (s *jsonStore) GetById(ctx context.Context, id int) (domain.Product, error) {
 	products, err := s.loadProducts()
 	if err != nil {
 		return domain.Product{}, err
@@ -59,7 +50,8 @@ func (s *jsonStore) Read(id int) (domain.Product, error) {
 	return domain.Product{}, errors.New("product not found")
 }
 
-func (s *jsonStore) Create(product domain.Product) error {
+// Create crea un nuevo producto
+func (s *jsonStore) Create(ctx context.Context, product domain.Product) error {
 	products, err := s.loadProducts()
 	if err != nil {
 		return err
@@ -69,7 +61,8 @@ func (s *jsonStore) Create(product domain.Product) error {
 	return s.saveProducts(products)
 }
 
-func (s *jsonStore) Update(product domain.Product) error {
+// Update actualiza un producto existente
+func (s *jsonStore) Update(ctx context.Context, product domain.Product) error {
 	products, err := s.loadProducts()
 	if err != nil {
 		return err
@@ -83,7 +76,8 @@ func (s *jsonStore) Update(product domain.Product) error {
 	return errors.New("product not found")
 }
 
-func (s *jsonStore) Delete(id int) error {
+// Delete elimina un producto por id
+func (s *jsonStore) Delete(ctx context.Context, id int) error {
 	products, err := s.loadProducts()
 	if err != nil {
 		return err
@@ -97,7 +91,8 @@ func (s *jsonStore) Delete(id int) error {
 	return errors.New("product not found")
 }
 
-func (s *jsonStore) Exists(codeValue string) bool {
+// Exists verifica si un producto existe por su código
+func (s *jsonStore) Exists(ctx context.Context, codeValue string) bool {
 	products, err := s.loadProducts()
 	if err != nil {
 		return false
@@ -108,4 +103,15 @@ func (s *jsonStore) Exists(codeValue string) bool {
 		}
 	}
 	return false
+}
+
+// NewJsonStore crea un nuevo store de productos
+func NewJsonStore(path string) StoreInterface {
+	_, err := os.Stat(path)
+	if err != nil {
+		panic(err)
+	}
+	return &jsonStore{
+		pathToFile: path,
+	}
 }

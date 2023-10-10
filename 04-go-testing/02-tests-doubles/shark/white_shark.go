@@ -12,6 +12,10 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+var (
+	ErrCouldntHunt = fmt.Errorf("could not hunt the prey")
+)
+
 type whiteShark struct {
 	// speed in m/s
 	speed float64
@@ -26,7 +30,7 @@ func (w *whiteShark) Hunt(prey prey.Prey) error {
 		fmt.Println("ñam ñam")
 		return nil
 	}
-	return fmt.Errorf("could not hunt the prey")
+	return ErrCouldntHunt
 }
 
 func CreateWhiteShark(simulator simulator.CatchSimulator) Shark {

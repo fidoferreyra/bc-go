@@ -1,16 +1,20 @@
 package store
 
-import "github.com/bootcamp-go/consignas-go-db.git/internal/domain"
+import (
+	"context"
+
+	"github.com/bootcamp-go/consignas-go-db.git/internal/domain"
+)
 
 type StoreInterface interface {
-	// Read devuelve un producto por su id
-	Read(id int) (domain.Product, error)
+	// GetById devuelve un producto por su id
+	GetById(ctx context.Context, id int) (domain.Product, error)
 	// Create agrega un nuevo producto
-	Create(product domain.Product) error
+	Create(ctx context.Context, product domain.Product) error
 	// Update actualiza un producto
-	Update(product domain.Product) error
+	Update(ctx context.Context, product domain.Product) error
 	// Delete elimina un producto
-	Delete(id int) error
+	Delete(ctx context.Context, id int) error
 	// Exists verifica si un producto existe
-	Exists(codeValue string) bool
+	Exists(ctx context.Context, codeValue string) bool
 }

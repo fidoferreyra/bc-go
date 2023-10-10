@@ -1,18 +1,20 @@
 package product
 
 import (
+	"context"
+
 	"github.com/bootcamp-go/consignas-go-db.git/internal/domain"
 )
 
 type Service interface {
 	// GetByID busca un producto por su id
-	GetByID(id int) (domain.Product, error)
+	GetByID(ctx context.Context, id int) (prod domain.Product, err error)
 	// Create agrega un nuevo producto
-	Create(p domain.Product) (domain.Product, error)
+	Create(ctx context.Context, p domain.Product) (prod domain.Product, err error)
 	// Delete elimina un producto
-	Delete(id int) error
+	Delete(ctx context.Context, id int) error
 	// Update actualiza un producto
-	Update(id int, p domain.Product) (domain.Product, error)
+	Update(ctx context.Context, id int, p domain.Product) (prod domain.Product, err error)
 }
 
 type service struct {
@@ -24,23 +26,24 @@ func NewService(r Repository) Service {
 	return &service{r}
 }
 
-func (s *service) GetByID(id int) (domain.Product, error) {
-	p, err := s.r.GetByID(id)
+func (s *service) GetByID(ctx context.Context, id int) (domain.Product, error) {
+	p, err := s.r.GetByID(ctx, id)
 	if err != nil {
 		return domain.Product{}, err
 	}
 	return p, nil
 }
 
-func (s *service) Create(p domain.Product) (domain.Product, error) {
-	p, err := s.r.Create(p)
+func (s *service) Create(ctx context.Context, p domain.Product) (domain.Product, error) {
+	p, err := s.r.Create(ctx, p)
 	if err != nil {
 		return domain.Product{}, err
 	}
 	return p, nil
 }
-func (s *service) Update(id int, u domain.Product) (domain.Product, error) {
-	p, err := s.r.GetByID(id)
+
+func (s *service) Update(ctx context.Context, id int, u domain.Product) (domain.Product, error) {
+	p, err := s.r.GetByID(ctx, id)
 	if err != nil {
 		return domain.Product{}, err
 	}
@@ -59,15 +62,15 @@ func (s *service) Update(id int, u domain.Product) (domain.Product, error) {
 	if u.Price > 0 {
 		p.Price = u.Price
 	}
-	p, err = s.r.Update(id, p)
+	p, err = s.r.Update(ctx, id, p)
 	if err != nil {
 		return domain.Product{}, err
 	}
 	return p, nil
 }
 
-func (s *service) Delete(id int) error {
-	err := s.r.Delete(id)
+func (s *service) Delete(ctx context.Context, id int) error {
+	err := s.r.Delete(ctx, id)
 	if err != nil {
 		return err
 	}

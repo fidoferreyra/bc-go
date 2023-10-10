@@ -32,7 +32,7 @@ func (h *productHandler) GetByID() gin.HandlerFunc {
 			web.Failure(c, 400, errors.New("invalid id"))
 			return
 		}
-		product, err := h.s.GetByID(id)
+		product, err := h.s.GetByID(c, id)
 		if err != nil {
 			web.Failure(c, 404, errors.New("product not found"))
 			return
@@ -106,7 +106,7 @@ func (h *productHandler) Post() gin.HandlerFunc {
 			web.Failure(c, 400, err)
 			return
 		}
-		p, err := h.s.Create(product)
+		p, err := h.s.Create(c, product)
 		if err != nil {
 			web.Failure(c, 400, err)
 			return
@@ -133,7 +133,7 @@ func (h *productHandler) Delete() gin.HandlerFunc {
 			web.Failure(c, 400, errors.New("invalid id"))
 			return
 		}
-		err = h.s.Delete(id)
+		err = h.s.Delete(c, id)
 		if err != nil {
 			web.Failure(c, 404, err)
 			return
@@ -160,7 +160,7 @@ func (h *productHandler) Put() gin.HandlerFunc {
 			web.Failure(c, 400, errors.New("invalid id"))
 			return
 		}
-		_, err = h.s.GetByID(id)
+		_, err = h.s.GetByID(c, id)
 		if err != nil {
 			web.Failure(c, 404, errors.New("product not found"))
 			return
@@ -185,7 +185,7 @@ func (h *productHandler) Put() gin.HandlerFunc {
 			web.Failure(c, 400, err)
 			return
 		}
-		p, err := h.s.Update(id, product)
+		p, err := h.s.Update(c, id, product)
 		if err != nil {
 			web.Failure(c, 409, err)
 			return
@@ -221,7 +221,7 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 			web.Failure(c, 400, errors.New("invalid id"))
 			return
 		}
-		_, err = h.s.GetByID(id)
+		_, err = h.s.GetByID(c, id)
 		if err != nil {
 			web.Failure(c, 404, errors.New("product not found"))
 			return
@@ -245,7 +245,7 @@ func (h *productHandler) Patch() gin.HandlerFunc {
 				return
 			}
 		}
-		p, err := h.s.Update(id, update)
+		p, err := h.s.Update(c, id, update)
 		if err != nil {
 			web.Failure(c, 409, err)
 			return
